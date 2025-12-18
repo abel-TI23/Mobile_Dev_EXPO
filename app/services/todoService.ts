@@ -14,6 +14,7 @@ export type Todo = {
   text: string;
   done: number;       
   created_at?: string;
+  finished_at?: string;
 };
 
 /** Create table */
@@ -25,7 +26,8 @@ export async function initDB(): Promise<void> {
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       text TEXT NOT NULL,
       done INTEGER NOT NULL DEFAULT 0,
-      created_at DATETIME DEFAULT (datetime('now'))
+      created_at DATETIME DEFAULT (datetime('now')),
+      finished_at DATETIME
     );
   `);
 }
@@ -67,6 +69,13 @@ export async function updateTodo(
   if (fields.done !== undefined) {
     sets.push("done = ?");
     params.push(fields.done);
+    
+    // Set finished_at when marking as done, clear it when marking as undone
+    if (fields.done === 1) {
+      sets.push("finished_at = datetime('now')");
+    } else {
+      sets.push("finished_at = NULL");
+    }
   }
 
   if (sets.length === 0) return;
